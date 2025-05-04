@@ -6,6 +6,7 @@ import ma.enset.ebankingbackend.enums.OperationType;
 import ma.enset.ebankingbackend.repositories.AccountOperationRepository;
 import ma.enset.ebankingbackend.repositories.BankAccountRepository;
 import ma.enset.ebankingbackend.repositories.CustomerRepository;
+import ma.enset.ebankingbackend.services.BankService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,8 +22,17 @@ public class EbankingBackendApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(EbankingBackendApplication.class, args);
 	}
-
+	
 	@Bean
+	CommandLineRunner start(BankService bankService) {
+		return args -> {
+			// Example: Consult an account with the given ID
+			bankService.consulter("14887f56-88a9-4a82-a94e-2f3658d39444");
+		};
+	}
+
+
+	//@Bean
 	CommandLineRunner start(CustomerRepository customerRepository,
 							BankAccountRepository bankAccountRepository,
 							AccountOperationRepository accountOperationRepository) {
@@ -57,7 +67,7 @@ public class EbankingBackendApplication {
 				savingAccount.setInterestRate(3.5 + Math.random() * 2);
 				bankAccountRepository.save(savingAccount);
 			});
-			
+
 			// Create operations for each bank account
 			bankAccountRepository.findAll().forEach(account -> {
 				for (int i = 0; i < 3; i++) {
