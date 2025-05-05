@@ -6,7 +6,11 @@ import ma.enset.ebankingbackend.enums.OperationType;
 import ma.enset.ebankingbackend.repositories.AccountOperationRepository;
 import ma.enset.ebankingbackend.repositories.BankAccountRepository;
 import ma.enset.ebankingbackend.repositories.CustomerRepository;
+import ma.enset.ebankingbackend.services.BankAccountService;
 import ma.enset.ebankingbackend.services.BankService;
+import ma.enset.ebankingbackend.exceptions.BalanceNotSufficientException;
+import ma.enset.ebankingbackend.exceptions.BankAccountNotFoundException;
+import ma.enset.ebankingbackend.exceptions.CustomerNotFoundException;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,6 +19,8 @@ import org.springframework.context.annotation.Bean;
 import java.util.Date;
 import java.util.UUID;
 import java.util.stream.Stream;
+import java.util.List;
+import java.util.Random;
 
 @SpringBootApplication
 public class EbankingBackendApplication {
@@ -24,10 +30,55 @@ public class EbankingBackendApplication {
 	}
 	
 	@Bean
-	CommandLineRunner start(BankService bankService) {
+	CommandLineRunner start(BankAccountService bankAccountService) {
 		return args -> {
-			// Example: Consult an account with the given ID
-			bankService.consulter("14887f56-88a9-4a82-a94e-2f3658d39444");
+			// Create 3 customers
+			Stream.of("Amine", "Redone", "Aicha").forEach(name -> {
+				Customer customer = new Customer();
+				customer.setName(name);
+				customer.setEmail(name.toLowerCase() + "@gmail.com");
+				bankAccountService.saveCustomer(customer);
+			});
+			
+			// Get list of customers and create accounts
+			List<Customer> customers = bankAccountService.listCustomers();
+			Random random = new Random();
+			
+			for(Customer customer : customers) {
+				// Create current account
+				try {
+					bankAccountService.saveCurrentBankAccount(1000 + random.nextDouble() * 9000, 
+							100 + random.nextDouble() * 900, 
+							customer.getId());
+				} catch (CustomerNotFoundException e) {
+					e.printStackTrace();
+				}
+				
+				// Create saving account
+				try {
+					bankAccountService.saveSavingBankAccount(1000 + random.nextDouble() * 9000, 
+							3.5 + random.nextDouble() * 2, 
+							customer.getId());
+				} catch (CustomerNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+			
+			// Create operations for each bank account
+			List<BankAccount> bankAccounts = bankAccountService.bankAccountList();
+			for(BankAccount account : bankAccounts) {
+				for(int i = 0; i < 10; i++) {
+					try {
+						if(i % 2 == 0) {
+							bankAccountService.credit(account.getId(), 100 + random.nextDouble() * 400, "Credit operation");
+						} else {
+							bankAccountService.debit(account.getId(), 50 + random.nextDouble() * 200, "Debit operation");
+						}
+					} catch (BankAccountNotFoundException | BalanceNotSufficientException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		};
 	}
 
