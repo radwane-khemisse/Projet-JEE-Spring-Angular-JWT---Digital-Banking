@@ -32,6 +32,7 @@ public class EbankingBackendApplication {
 	@Bean
 	CommandLineRunner start(BankAccountService bankAccountService) {
 		return args -> {
+			/*
 			// Create 3 customers
 			Stream.of("Amine", "Redone", "Aicha").forEach(name -> {
 				Customer customer = new Customer();
@@ -79,6 +80,8 @@ public class EbankingBackendApplication {
 					}
 				}
 			}
+
+			 */
 		};
 	}
 
